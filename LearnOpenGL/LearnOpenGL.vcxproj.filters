@@ -22,10 +22,16 @@
     <ClCompile Include="src\Shader.cpp">
       <Filter>Shaders</Filter>
     </ClCompile>
+    <ClCompile Include="external\stb_image\stb_image.cpp">
+      <Filter>External</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Shader.h">
       <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="external\stb_image\stb_image.h">
+      <Filter>External</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

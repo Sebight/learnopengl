@@ -2,6 +2,7 @@
 #include <GLFW3/glfw3.h>
 #include <iostream>
 #include "Shader.h"
+#include <stb_image/stb_image.h>
 
 typedef unsigned int uint;
 
@@ -16,15 +17,23 @@ void processInput(GLFWwindow* window) {
 	}
 }
 
+//float vertices[] = {
+//	// Pos			    // Color		  // Tex coord
+//	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Left
+//	0.0f, 0.5f, 0.0f,   0.0f, 0.0f, 1.0f, 0.5f, 1.0f, // Top
+//	0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f  // Right
+//};
 float vertices[] = {
-	// Pos			    // Color
-	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // Left
-	0.0f, 0.5f, 0.0f,   0.0f, 0.0f, 1.0f, // Top
-	0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // Right
+	// positions          // colors           // texture coords
+	 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+	 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+	-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+	-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 };
 
-unsigned int indices[] = {  // note that we start from 0!
-	0, 1, 2,   // first triangle
+unsigned int indices[] = {
+	0, 1, 2,
+	0, 2, 3
 };
 
 int main() {
@@ -61,10 +70,12 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	uint EBO;
 	glGenBuffers(1, &EBO);
@@ -74,6 +85,27 @@ int main() {
 	Shader shader("shaders\\vertex.glsl", "shaders\\fragment.glsl");
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	uint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	// Filtering and wrap settings can be here.
+
+	int width;
+	int height;
+	int channels;
+	unsigned char* data = stbi_load("textures/wall.jpg", &width, &height, &channels, 0);
+
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else {
+		printf("Failed to load texture image.\n");
+	}
+
+
+	stbi_image_free(data);
 
 	float offset = 0.0f;
 	int dir = 1;
@@ -96,8 +128,9 @@ int main() {
 
 
 		shader.Use();
-		shader.SetFloat("offset", offset);
+		//shader.SetFloat("offset", offset);
 
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
