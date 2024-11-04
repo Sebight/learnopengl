@@ -11,4 +11,6 @@ public:
 	void SetBool(const char* name, bool value) const;
 	void SetInt(const char* name, int value) const;
 	void SetFloat(const char* name, float value) const;
+
+	void SetMat4f(const char* name, const glm::mat4& value);
 };

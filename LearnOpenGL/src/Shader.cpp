@@ -2,6 +2,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "Shader.h"
 
 Shader::Shader(const char* vPath, const char* fPath)
@@ -99,4 +102,9 @@ void Shader::SetInt(const char* name, int value) const
 void Shader::SetFloat(const char* name, float value) const
 {
 	glUniform1f(glGetUniformLocation(Id, name), value);
+}
+
+void Shader::SetMat4f(const char* name, const glm::mat4& value)
+{
+	glUniformMatrix4fv(glGetUniformLocation(Id, name), 1, GL_FALSE, glm::value_ptr(value));
 }
