@@ -17,12 +17,6 @@ void processInput(GLFWwindow* window) {
 	}
 }
 
-//float vertices[] = {
-//	// Pos			    // Color		  // Tex coord
-//	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Left
-//	0.0f, 0.5f, 0.0f,   0.0f, 0.0f, 1.0f, 0.5f, 1.0f, // Top
-//	0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f  // Right
-//};
 float vertices[] = {
 	// positions          // colors           // texture coords
 	 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
@@ -94,7 +88,7 @@ int main() {
 	int width;
 	int height;
 	int channels;
-	unsigned char* data = stbi_load("textures/wall.jpg", &width, &height, &channels, 0);
+	unsigned char* data = stbi_load("textures/buas.jpeg", &width, &height, &channels, 0);
 
 	if (data) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -104,11 +98,18 @@ int main() {
 		printf("Failed to load texture image.\n");
 	}
 
-
 	stbi_image_free(data);
 
-	float offset = 0.0f;
-	int dir = 1;
+	uint texture2;
+	glGenTextures(1, &texture2);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+	data = stbi_load("textures/wall.jpg", &width, &height, &channels, 0);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+
+	stbi_image_free(data);
 
 	while (!glfwWindowShouldClose(window)) {
 		// Input
@@ -118,19 +119,15 @@ int main() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (offset > 1.0f) {
-			dir = -1;
-		}
-		else if (offset < -1.0f) {
-			dir = 1;
-		}
-		offset += 0.01f * dir;
-
-
 		shader.Use();
-		//shader.SetFloat("offset", offset);
+		shader.SetInt("texture1", 0);
+		shader.SetInt("texture2", 1);
 
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
