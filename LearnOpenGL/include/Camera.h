@@ -6,6 +6,8 @@ public:
 	void OnInput(int key, bool press, float dt);
 	void OnMouse(double xPos, double yPos);
 	void OnScroll(double offset);
+
+	glm::vec3 GetPosition() const;
 	
 	glm::mat4 GetView() const;
 	float GetFov() const;

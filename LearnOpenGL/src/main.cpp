@@ -98,6 +98,8 @@ void processInput(GLFWwindow* window, float dt) {
 	camera.OnInput(GLFW_KEY_S, glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS, dt);
 	camera.OnInput(GLFW_KEY_D, glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS, dt);
 	camera.OnInput(GLFW_KEY_A, glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS, dt);
+	camera.OnInput(GLFW_KEY_Q, glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS, dt);
+	camera.OnInput(GLFW_KEY_E, glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS, dt);
 }
 
 
@@ -139,65 +141,16 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
-
-	// VAO
-	uint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	// VBO bind
-	uint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	uint EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
 	Shader shader("shaders\\vertex.glsl", "shaders\\fragment.glsl");
+	Shader lightShader("shaders\\vertex.glsl", "shaders\\light.glsl");
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	uint texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	// Filtering and wrap settings can be here.
-
-	int width;
-	int height;
-	int channels;
-	unsigned char* data = stbi_load("textures/buas.jpeg", &width, &height, &channels, 0);
-
-	if (data) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else {
-		printf("Failed to load texture image.\n");
-	}
-
-	stbi_image_free(data);
-
-	uint texture2;
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-	data = stbi_load("textures/wall.jpg", &width, &height, &channels, 0);
-	if (data) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-
-	stbi_image_free(data);
-
-	std::string path = "assets\\backpack\\backpack.obj";
+	std::string path = "assets\\cube.obj";
 	Model myModel(path);
+	path = "assets\\cube.obj";
+	Model light(path);
+
 	while (!glfwWindowShouldClose(window)) {
 		float time = static_cast<float>(glfwGetTime());
 		dt = time - lastTime;
@@ -209,27 +162,41 @@ int main() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader.Use();
-
-		glm::mat4 transform = glm::mat4(1.0f);
-		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+		glm::vec3 lightPos(5.0f, 3.0f, 2.0f);
 
 		glm::mat4 proj = glm::perspective(glm::radians(camera.GetFov()), static_cast<float>(800) / static_cast<float>(600), 0.1f, 100.0f);
 
 		glm::mat4 view = camera.GetView();
 
-		shader.SetInt("texture1", 0);
-		shader.SetInt("texture2", 1);
-		shader.SetMat4f("transform", transform);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
+		model = glm::translate(model, lightPos);
+
+		lightShader.Use();
+
+		lightShader.SetMat4f("projection", proj);
+		lightShader.SetMat4f("view", view);
+
+		lightShader.SetVec3("objColor", 1.0f, 0.5f, 0.31f);
+		lightShader.SetVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		lightShader.SetMat4f("model", model);
+
+		light.Draw(lightShader);
+
+		model = glm::scale(model, glm::vec3(1.25f, 1.25f, 1.25f));
+		model = glm::translate(model, -lightPos);
+
+		shader.Use();
+
 		shader.SetMat4f("projection", proj);
 		shader.SetMat4f("view", view);
-		shader.SetFloat("time", static_cast<float>(glfwGetTime()));
 
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		shader.SetVec3("objColor", 1.0f, 0.5f, 0.31f);
+		shader.SetVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
 		shader.SetMat4f("model", model);
+		shader.SetVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+		shader.SetVec3("viewPos", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
 		myModel.Draw(shader);
 

@@ -248,6 +248,7 @@
     <None Include="external\assimp\vector2.inl" />
     <None Include="external\assimp\vector3.inl" />
     <None Include="shaders\fragment.glsl" />
+    <None Include="shaders\light.glsl" />
     <None Include="shaders\vertex.glsl" />
   </ItemGroup>
   <ItemGroup>

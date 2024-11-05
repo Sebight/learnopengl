@@ -346,6 +346,9 @@
     <None Include="external\assimp\vector3.inl">
       <Filter>External\assimp</Filter>
     </None>
+    <None Include="shaders\light.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Library Include="external\assimp\assimp.lib">

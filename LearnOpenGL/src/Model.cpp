@@ -64,12 +64,12 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		vector.z = mesh->mVertices[i].z;
 
 		vertex.Position = vector;
-		vector.x = 0;
-		vector.y = 0;
-		vector.z = 0;
-		/*vector.x = mesh->mNormals[i].x;
+		//vector.x = 0;
+		//vector.y = 0;
+		//vector.z = 0;
+		vector.x = mesh->mNormals[i].x;
 		vector.y = mesh->mNormals[i].y;
-		vector.z = mesh->mNormals[i].z;*/
+		vector.z = mesh->mNormals[i].z;
 
 		vertex.Normal = vector;
 

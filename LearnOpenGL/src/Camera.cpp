@@ -20,6 +20,12 @@ void Camera::OnInput(int key, bool press, float dt)
 	if (key == GLFW_KEY_D && press) {
 		m_cameraPos += glm::normalize(glm::cross(m_cameraFront, m_cameraUp)) * adjustedCameraSpeed;
 	}
+	if (key == GLFW_KEY_Q && press) {
+		m_cameraPos += adjustedCameraSpeed * -m_cameraUp;
+	}
+	if (key == GLFW_KEY_E && press) {
+		m_cameraPos += adjustedCameraSpeed * m_cameraUp;
+	}
 }
 
 void Camera::OnMouse(double xPos, double yPos)
@@ -64,6 +70,11 @@ void Camera::OnScroll(double offset)
 	else if (m_fov > FOV_MAX) {
 		m_fov = FOV_MAX;
 	}
+}
+
+glm::vec3 Camera::GetPosition() const
+{
+	return m_cameraPos;
 }
 
 glm::mat4 Camera::GetView() const
