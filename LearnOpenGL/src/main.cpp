@@ -1,12 +1,15 @@
-#include <glad/glad.h>
-#include <GLFW3/glfw3.h>
-#include <iostream>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "common.h"
+
 #include "Shader.h"
-#include <stb_image/stb_image.h>
 #include "Camera.h"
+
+#include "Vertex.h"
+#include "Texture.h"
+#include "Mesh.h"
+//#include ""
+#include "Model.h"
+
+#include <filesystem>
 
 typedef unsigned int uint;
 
@@ -193,6 +196,8 @@ int main() {
 
 	stbi_image_free(data);
 
+	std::string path = "assets\\backpack\\backpack.obj";
+	Model myModel(path);
 	while (!glfwWindowShouldClose(window)) {
 		float time = static_cast<float>(glfwGetTime());
 		dt = time - lastTime;
@@ -221,25 +226,12 @@ int main() {
 		shader.SetMat4f("view", view);
 		shader.SetFloat("time", static_cast<float>(glfwGetTime()));
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		shader.SetMat4f("model", model);
 
-		glBindVertexArray(VAO);
-		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		for (int i = 0; i < 10; i++) {
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubes[i]);
-			model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::rotate(model, float(glfwGetTime()) + 20 * i, glm::vec3(i, 0.0f, 1.0f));
-
-			shader.SetMat4f("model", model);
-
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-		glBindVertexArray(0);
-
+		myModel.Draw(shader);
 
 		// Screen render
 		glfwSwapBuffers(window);

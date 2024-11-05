@@ -1,7 +1,4 @@
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <GLFW3/glfw3.h>
+#include "common.h"
 #include "Camera.h"
 
 void Camera::OnInput(int key, bool press, float dt)

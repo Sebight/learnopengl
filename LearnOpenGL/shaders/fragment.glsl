@@ -9,6 +9,5 @@ uniform float time;
 
 void main()
 {
-	float blend = (sin(time*3) / 2) + 0.5f;
-	FragColor = mix(texture(texture1, TexCoord * vec2(1, -1)), texture(texture2, TexCoord), blend);
+	FragColor = vec4(1.0f);
 }
