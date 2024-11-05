@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Shader.h"
 #include <stb_image/stb_image.h>
+#include "Camera.h"
 
 typedef unsigned int uint;
 
@@ -76,78 +77,33 @@ unsigned int indices[] = {
 	0, 2, 3
 };
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-float yaw = 0;
-float pitch = 0;
-float fov = 45;
-bool firstMouse = true;
-
-const float cameraSpeed = 5.0f;
-bool shiftPressed = false;
+Camera camera;
+float lastTime = 0;
+float dt = 0;
 
 void processInput(GLFWwindow* window, float dt) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
 
-	shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
-	float adjustedCameraSpeed = (shiftPressed ? cameraSpeed * 2 : cameraSpeed) * dt;
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		cameraPos += adjustedCameraSpeed * cameraFront;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		cameraPos -= adjustedCameraSpeed * cameraFront;
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * adjustedCameraSpeed;
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * adjustedCameraSpeed;
-}
-
-float lastX = 400;
-float lastY = 300;
-
-void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
-	if (firstMouse) {
-		lastX = xPos;
-		lastY = yPos;
-		firstMouse = false;
+	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
-	float xOffset = xPos - lastX;
-	float yOffset = yPos - lastY;
+	camera.OnInput(GLFW_KEY_LEFT_SHIFT, glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS, dt);
+	camera.OnInput(GLFW_KEY_W, glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS, dt);
+	camera.OnInput(GLFW_KEY_S, glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS, dt);
+	camera.OnInput(GLFW_KEY_D, glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS, dt);
+	camera.OnInput(GLFW_KEY_A, glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS, dt);
+}
 
-	lastX = xPos;
-	lastY = yPos;
 
-	const float sensitivity = 0.05f;
-	xOffset *= sensitivity;
-	yOffset *= sensitivity;
-
-	yaw += xOffset;
-	pitch -= yOffset;
-
-	if (pitch > 89.0f) pitch = 89.0f;
-	if (pitch < -89.0f) pitch = -89.0f;
-
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-	cameraFront = glm::normalize(direction);
+void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
+	camera.OnMouse(xPos, yPos);
 }
 
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
-	fov -= (float)yOffset;
-
-	if (fov < 1.0f) {
-		fov = 1.0f;
-	}
-	else if (fov > 45.0f) {
-		fov = 45.0f;
-	}
+	camera.OnScroll(yOffset);
 }
 
 int main() {
@@ -237,11 +193,8 @@ int main() {
 
 	stbi_image_free(data);
 
-	float lastTime = 0;
-	float dt = 0;
-
 	while (!glfwWindowShouldClose(window)) {
-		float time = glfwGetTime();
+		float time = static_cast<float>(glfwGetTime());
 		dt = time - lastTime;
 		lastTime = time;
 		// Input
@@ -257,17 +210,16 @@ int main() {
 		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
 		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
-		glm::mat4 proj = glm::perspective(glm::radians(fov), static_cast<float>(800) / static_cast<float>(600), 0.1f, 100.0f);
+		glm::mat4 proj = glm::perspective(glm::radians(camera.GetFov()), static_cast<float>(800) / static_cast<float>(600), 0.1f, 100.0f);
 
-		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		glm::mat4 view = camera.GetView();
 
 		shader.SetInt("texture1", 0);
 		shader.SetInt("texture2", 1);
 		shader.SetMat4f("transform", transform);
 		shader.SetMat4f("projection", proj);
 		shader.SetMat4f("view", view);
-		shader.SetFloat("time", glfwGetTime());
+		shader.SetFloat("time", static_cast<float>(glfwGetTime()));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture);
