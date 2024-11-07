@@ -85,7 +85,8 @@ int main() {
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	std::string path = "assets\\sponza.obj";
+	//std::string path = "assets\\backpack\\backpack.obj";
+	std::string path = "assets\\Sponza\\Sponza.gltf";
 	Model myModel(path);
 	path = "assets\\cube.obj";
 	Model light(path);
@@ -101,7 +102,7 @@ int main() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::vec3 lightPos(5.0f, 3.0f, sin(glfwGetTime()) * 5);
+		glm::vec3 lightPos(5.0f, 3.0f, 5.0f);
 
 		glm::mat4 proj = glm::perspective(glm::radians(camera.GetFov()), static_cast<float>(800) / static_cast<float>(600), 0.1f, 1000.0f);
 
@@ -130,12 +131,18 @@ int main() {
 		shader.SetMat4f("projection", proj);
 		shader.SetMat4f("view", view);
 
-		shader.SetVec3("objColor", 1.0f, 0.5f, 0.31f);
+		//shader.SetVec3("objColor", 1.0f, 0.5f, 0.31f);
 		shader.SetVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		shader.SetMat4f("model", model);
-		shader.SetVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
 		shader.SetVec3("viewPos", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
+
+		shader.SetFloat("material.shininess", 32.0f);
+
+		shader.SetVec3("light.position", lightPos.x, lightPos.y, lightPos.z);
+		shader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+		shader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+		shader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
 		myModel.Draw(shader);
 

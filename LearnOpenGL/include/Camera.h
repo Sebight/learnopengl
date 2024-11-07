@@ -18,7 +18,7 @@ private:
 	float m_yaw = -90.0f;
 	float m_pitch = 0;
 	bool m_firstMouse = true;
-	const float m_cameraSpeed = 5.0f;
+	const float m_cameraSpeed = 50.0f;
 	bool m_shiftPressed = false;
 	float m_lastX = 400;
 	float m_lastY = 300;
