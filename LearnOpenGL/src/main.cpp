@@ -136,6 +136,10 @@ int main() {
 		shader.SetFloat("material.shininess", 32.0f);
 
 		shader.SetVec3("light.position", lightPos.x, lightPos.y, lightPos.z);
+		shader.SetVec3("light.direction", 0.0f, -1.0f, 0.0f);
+		shader.SetFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+		shader.SetFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+
 		shader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
 		shader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
 		shader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
