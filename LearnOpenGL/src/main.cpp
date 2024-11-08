@@ -102,37 +102,33 @@ int main() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::vec3 lightPos(5.0f, 3.0f, 5.0f);
+		glm::vec3 lightPos(20.0f, 50.0f, 0.0f);
 
 		glm::mat4 proj = glm::perspective(glm::radians(camera.GetFov()), static_cast<float>(800) / static_cast<float>(600), 0.1f, 1000.0f);
 
 		glm::mat4 view = camera.GetView();
 
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
-		model = glm::translate(model, lightPos);
+		glm::mat4 lightModel = glm::mat4(1.0f);
+		lightModel = glm::scale(lightModel, glm::vec3(1.0f, 1.0f, 1.0f));
+		lightModel = glm::translate(lightModel, lightPos);
 
 		lightShader.Use();
 
 		lightShader.SetMat4f("projection", proj);
 		lightShader.SetMat4f("view", view);
 
-		lightShader.SetVec3("objColor", 1.0f, 0.5f, 0.31f);
-		lightShader.SetVec3("lightColor", 1.0f, 1.0f, 1.0f);
-		lightShader.SetMat4f("model", model);
+		lightShader.SetMat4f("model", lightModel);
 
 		light.Draw(lightShader);
 
-		model = glm::scale(model, glm::vec3(1.25f, 1.25f, 1.25f));
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
 		model = glm::translate(model, -lightPos);
 
 		shader.Use();
 
 		shader.SetMat4f("projection", proj);
 		shader.SetMat4f("view", view);
-
-		//shader.SetVec3("objColor", 1.0f, 0.5f, 0.31f);
-		shader.SetVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		shader.SetMat4f("model", model);
 		shader.SetVec3("viewPos", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
@@ -143,6 +139,10 @@ int main() {
 		shader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
 		shader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
 		shader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		//shader.SetVec3("light.direction", -0.2f, -1.0f, -0.3f);
+		shader.SetFloat("light.constant", 1.0f);
+		shader.SetFloat("light.linear", 0.007f);
+		shader.SetFloat("light.quadratic", 0.0002f);
 
 		myModel.Draw(shader);
 

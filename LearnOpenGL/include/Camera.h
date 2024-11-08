@@ -24,7 +24,7 @@ private:
 	float m_lastY = 300;
 
 	const float FOV_MIN = 1.0f;
-	const float FOV_MAX = 45.0f;
+	const float FOV_MAX = 70.0f;
 	float m_fov = FOV_MAX;
 };
 
