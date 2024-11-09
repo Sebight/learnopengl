@@ -234,6 +234,7 @@
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\Vertex.h" />
     <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\Light.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="external\assimp\color4.inl" />

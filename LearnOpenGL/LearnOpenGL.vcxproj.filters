@@ -19,6 +19,9 @@
     <Filter Include="External\assimp">
       <UniqueIdentifier>{5893048b-83d4-460b-ad65-bf678064eba1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Lights">
+      <UniqueIdentifier>{79ba4d48-3e10-493f-adbe-966d88a7de1f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\glad\glad.c">
@@ -304,6 +307,9 @@
     </ClInclude>
     <ClInclude Include="external\assimp\ZipArchiveIOSystem.h">
       <Filter>External\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Light.h">
+      <Filter>Lights</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

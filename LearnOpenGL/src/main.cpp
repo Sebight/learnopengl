@@ -7,6 +7,7 @@
 #include "Texture.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "Light.h"
 
 #include <filesystem>
 
@@ -82,6 +83,19 @@ int main() {
 
 	Shader shader("shaders\\vertex.glsl", "shaders\\fragment.glsl");
 	Shader lightShader("shaders\\vertex.glsl", "shaders\\light.glsl");
+	
+	const int pointsLightN = 2;
+	PointLight pLight(glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-100.0f, 50.0f, 0.0f), 1.0f, 0.007f, 0.0002f);
+	PointLight pointLights[pointsLightN] = {
+		pLight,
+		PointLight(glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(200.0f, 50.0f, 0.0f), 1.0f, 0.007f, 0.0002f)
+	};
+
+	const int spotLightsN = 2;
+	SpotLight spotLights[spotLightsN] = {
+		SpotLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 50.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 20),
+		SpotLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(20.0f, 50.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 20)
+	};
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -102,7 +116,7 @@ int main() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::vec3 lightPos(20.0f, 50.0f, 0.0f);
+		glm::vec3 lightPos(0.0f, 80.0f, 0.0f);
 
 		glm::mat4 proj = glm::perspective(glm::radians(camera.GetFov()), static_cast<float>(800) / static_cast<float>(600), 0.1f, 1000.0f);
 
@@ -135,18 +149,78 @@ int main() {
 
 		shader.SetFloat("material.shininess", 32.0f);
 
-		shader.SetVec3("light.position", lightPos.x, lightPos.y, lightPos.z);
-		shader.SetVec3("light.direction", 0.0f, -1.0f, 0.0f);
-		shader.SetFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
-		shader.SetFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+		// Directional
+		shader.SetVec3("dirLight.direction", 0.0f, -1.0f, -2.0f);
+		shader.SetVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
+		shader.SetVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f);
+		shader.SetVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
 
-		shader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		shader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-		shader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		//shader.SetVec3("light.direction", -0.2f, -1.0f, -0.3f);
-		shader.SetFloat("light.constant", 1.0f);
-		shader.SetFloat("light.linear", 0.007f);
-		shader.SetFloat("light.quadratic", 0.0002f);
+		// Point lights
+		for (int i = 0; i < pointsLightN; i++) {
+			// pointLights[id]
+			char accessorBuffer[50];
+
+			PointLight& l = pointLights[i];
+
+			sprintf_s(accessorBuffer, 50, "pointLights[%d].position", i);
+			shader.SetVec3(accessorBuffer, l.GetPosition().x, l.GetPosition().y, l.GetPosition().z);
+
+			sprintf_s(accessorBuffer, 50, "pointLights[%d].constant", i);
+			shader.SetFloat(accessorBuffer, l.GetConstant());
+
+			sprintf_s(accessorBuffer, 50, "pointLights[%d].quadratic", i);
+			shader.SetFloat(accessorBuffer, l.GetQuadratic());
+
+			sprintf_s(accessorBuffer, 50, "pointLights[%d].linear", i);
+			shader.SetFloat(accessorBuffer, l.GetLinear());
+
+			sprintf_s(accessorBuffer, 50, "pointLights[%d].ambient", i);
+			shader.SetVec3(accessorBuffer, l.GetAmbient().x, l.GetAmbient().y, l.GetAmbient().z);
+
+			sprintf_s(accessorBuffer, 50, "pointLights[%d].diffuse", i);
+			shader.SetVec3(accessorBuffer, l.GetDiffuse().x, l.GetDiffuse().y, l.GetDiffuse().z);
+
+			sprintf_s(accessorBuffer, 50, "pointLights[%d].specular", i);
+			shader.SetVec3(accessorBuffer, l.GetSpecular().x, l.GetSpecular().y, l.GetSpecular().z);
+		}
+
+		// Point lights
+		for (int i = 0; i < spotLightsN; i++) {
+			// pointLights[id]
+			char accessorBuffer[50];
+
+			SpotLight& l = spotLights[i];
+
+			sprintf_s(accessorBuffer, 50, "spotLights[%d].position", i);
+			shader.SetVec3(accessorBuffer, l.GetPosition().x, l.GetPosition().y, l.GetPosition().z);
+
+			sprintf_s(accessorBuffer, 50, "spotLights[%d].direction", i);
+			shader.SetVec3(accessorBuffer, l.GetDirection().x, l.GetDirection().y, l.GetDirection().z);
+
+			sprintf_s(accessorBuffer, 50, "spotLights[%d].cutOff", i);
+			shader.SetFloat(accessorBuffer, l.GetInnerCutoff());
+
+			sprintf_s(accessorBuffer, 50, "spotLights[%d].outerCutOff", i);
+			shader.SetFloat(accessorBuffer, l.GetOuterCutoff());
+
+			sprintf_s(accessorBuffer, 50, "spotLights[%d].ambient", i);
+			shader.SetVec3(accessorBuffer, l.GetAmbient().x, l.GetAmbient().y, l.GetAmbient().z);
+
+			sprintf_s(accessorBuffer, 50, "spotLights[%d].diffuse", i);
+			shader.SetVec3(accessorBuffer, l.GetDiffuse().x, l.GetDiffuse().y, l.GetDiffuse().z);
+
+			sprintf_s(accessorBuffer, 50, "spotLights[%d].specular", i);
+			shader.SetVec3(accessorBuffer, l.GetSpecular().x, l.GetSpecular().y, l.GetSpecular().z);
+		}
+
+		//// Spotlight
+		//shader.SetVec3("spotLight.position", lightPos.x, lightPos.y, lightPos.z);
+		//shader.SetVec3("spotLight.direction", 0.0f, -1.0f, 0.0f);
+		//shader.SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		//shader.SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+		//shader.SetVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+		//shader.SetVec3("spotLight.diffuse", 0.5f, 0.5f, 0.5f);
+		//shader.SetVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
 
 		myModel.Draw(shader);
 
