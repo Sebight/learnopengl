@@ -355,6 +355,12 @@
     <None Include="shaders\light.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\depthShader.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\depthShaderF.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Library Include="external\assimp\assimp.lib">

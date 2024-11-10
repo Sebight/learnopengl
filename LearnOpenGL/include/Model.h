@@ -3,7 +3,9 @@
 class Model
 {
 public:
+	Model() = default;
 	Model(std::string& path);
+	Model(const char* path);
 
 	void Draw(Shader& shader);
 private:

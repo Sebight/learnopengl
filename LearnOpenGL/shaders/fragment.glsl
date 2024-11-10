@@ -123,13 +123,12 @@ void main()
 	vec3 viewDir = normalize(viewPos - FragPos);
 
 	vec3 result = ComputeDirLight(dirLight, norm, viewDir);
-	result = vec3(0.0f, 0.0f, 0.0f);
 
-	for (int i = 0; i < POINT_LIGHTS; i++) {
+	for (int i = 0; i < 0; i++) {
 		result += ComputePointLight(pointLights[i], norm, FragPos, viewDir);
 	}
 
-	for (int i = 0; i < SPOT_LIGHTS; i++) {
+	for (int i = 0; i < 0; i++) {
 		result += ComputeSpotLight(spotLights[i], norm, FragPos, viewDir);
 	}
 

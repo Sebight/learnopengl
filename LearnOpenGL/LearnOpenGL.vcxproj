@@ -248,6 +248,8 @@
     <None Include="external\assimp\SmoothingGroups.inl" />
     <None Include="external\assimp\vector2.inl" />
     <None Include="external\assimp\vector3.inl" />
+    <None Include="shaders\depthShader.glsl" />
+    <None Include="shaders\depthShaderF.glsl" />
     <None Include="shaders\fragment.glsl" />
     <None Include="shaders\light.glsl" />
     <None Include="shaders\vertex.glsl" />

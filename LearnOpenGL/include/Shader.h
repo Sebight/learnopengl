@@ -3,7 +3,7 @@ class Shader
 {
 public:
 	unsigned int Id;
-
+	Shader() = default;
 	Shader(const char* vPath, const char* fPath);
 
 	void Use();

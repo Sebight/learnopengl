@@ -16,6 +16,12 @@ Model::Model(std::string& path)
 	LoadModel(path);
 }
 
+Model::Model(const char* path)
+{
+	std::string s = path;
+	LoadModel(s);
+}
+
 void Model::Draw(Shader& shader)
 {
 	for (uint i = 0; i < m_meshes.size(); i++) {
