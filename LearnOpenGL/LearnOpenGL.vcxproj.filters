@@ -311,6 +311,7 @@
     <ClInclude Include="include\Light.h">
       <Filter>Lights</Filter>
     </ClInclude>
+    <ClInclude Include="external\stb_image\stbi_image_write.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.glsl">
@@ -361,6 +362,8 @@
     <None Include="shaders\depthShaderF.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\3.1.1.debug_quad.vs" />
+    <None Include="shaders\3.1.1.debug_quad_depth.fs" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="external\assimp\assimp.lib">

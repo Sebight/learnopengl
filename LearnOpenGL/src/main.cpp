@@ -15,6 +15,8 @@ typedef unsigned int uint;
 constexpr int WINDOW_WIDTH = 1400;
 constexpr int WINDOW_HEIGHT = 1000;
 
+void renderQuad();
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -27,6 +29,7 @@ float dt = 0;
 Shader shader;
 Shader lightShader;
 Shader depthShader;
+Shader debugDepthQuad;
 
 const int pointsLightN = 2;
 PointLight pLight(glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(-100.0f, 50.0f, 0.0f), 1.0f, 0.007f, 0.0002f);
@@ -45,6 +48,10 @@ Model myModel;
 Model light;
 
 glm::vec3 lightPos(0.0f, 5.0f, -10.0f);
+glm::mat4 lightProj = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, 0.1f, 200.0f);
+glm::mat4 lightView = glm::lookAt(glm::vec3(2.0f, 4.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+uint shadowMap;
 
 
 void processInput(GLFWwindow* window, float dt) {
@@ -83,22 +90,43 @@ void RenderScene(bool projOverride = false, glm::mat4 projOverrideValue = glm::m
 
 	glm::mat4 view = viewOverride ? viewOverrideValue : camera.GetView();
 
-	glm::mat4 lightModel = glm::mat4(1.0f);
-	lightModel = glm::scale(lightModel, glm::vec3(1.0f, 1.0f, 1.0f));
-	lightModel = glm::translate(lightModel, lightPos);
-
-	lightShader.Use();
-
-	lightShader.SetMat4f("projection", proj);
-	lightShader.SetMat4f("view", view);
-
-	lightShader.SetMat4f("model", lightModel);
-
-	light.Draw(lightShader);
-
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
-	model = glm::translate(model, -lightPos);
+
+	//lightShader.Use();
+	//lightShader.SetMat4f("projection", proj);
+	//lightShader.SetMat4f("view", view);
+	//lightShader.SetMat4f("model", model);
+
+	shader.Use();
+
+	shader.SetMat4f("projection", proj);
+	shader.SetMat4f("view", view);
+
+	shader.SetMat4f("model", model);
+	shader.SetVec3("viewPos", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
+
+	shader.SetFloat("material.shininess", 32.0f);
+
+	// Directional
+	shader.SetVec3("dirLight.direction", 0.0f, -1.0f, -2.0f);
+	shader.SetVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
+	shader.SetVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f);
+	shader.SetVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+
+	shader.SetMat4f("lightSpaceMatrix", lightProj * lightView);
+
+	light.Draw(shader);
+
+	model = glm::translate(model, glm::vec3(0.0f, -1.0f, -3.0f));
+	shader.SetMat4f("model", model);
+
+	shader.SetInt("shadowMap", 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, shadowMap);
+
+	light.Draw(shader);
+
+	return;
 
 	shader.Use();
 
@@ -212,8 +240,9 @@ int main() {
 	shader = Shader("shaders\\vertex.glsl", "shaders\\fragment.glsl");
 	lightShader = Shader("shaders\\vertex.glsl", "shaders\\light.glsl");
 	myModel = Model("assets\\Sponza\\Sponza.gltf");
-	light = Model("assets\\cube.obj");
+	light = Model("assets\\cube\\Cube.gltf");
 	depthShader = Shader("shaders\\depthShader.glsl", "shaders\\depthShaderF.glsl");
+	debugDepthQuad = Shader("shaders\\3.1.1.debug_quad.vs", "shaders\\3.1.1.debug_quad_depth.fs");
 
 	uint shadowMapFBO;
 	glGenFramebuffers(1, &shadowMapFBO);
@@ -221,7 +250,6 @@ int main() {
 	const uint SHADOW_MAP_WIDTH = 2048;
 	const uint SHADOW_MAP_HEIGHT = 2048;
 
-	uint shadowMap;
 	glGenTextures(1, &shadowMap);
 	glBindTexture(GL_TEXTURE_2D, shadowMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -238,14 +266,11 @@ int main() {
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glm::mat4 lightProj = glm::ortho(-35.0f, 35.0f, -35.0f, 35.0f, 0.1f, 75.0f);
-	glm::mat4 lightView = glm::lookAt(20.0f * lightPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 lightProjection = lightProj * lightView;
 
 	glm::mat4 proj = glm::perspective(glm::radians(camera.GetFov()), static_cast<float>(800) / static_cast<float>(600), 0.1f, 1000.0f);
 	glm::mat4 view = camera.GetView();
 
-	glm::mat4 lightSpaceMatrix = proj * view;
+	glm::mat4 lightSpaceMatrix = lightProj * lightView;
 
 	while (!glfwWindowShouldClose(window)) {
 		float time = static_cast<float>(glfwGetTime());
@@ -254,38 +279,86 @@ int main() {
 		// Input
 		processInput(window, dt);
 
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
-		model = glm::translate(model, -lightPos);
-
-		depthShader.Use();
-		depthShader.SetMat4f("lightSpaceMatrix", lightSpaceMatrix);
-		depthShader.SetMat4f("model", model);
-
+#if 1
 		// Shadow pass
 		glEnable(GL_DEPTH_TEST);
 		glViewport(0, 0, SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
 
 		glClear(GL_DEPTH_BUFFER_BIT);
+		glm::mat4 model = glm::mat4(1.0f);
 
-		myModel.Draw(depthShader);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		depthShader.Use();
+		depthShader.SetMat4f("lightSpaceMatrix", lightSpaceMatrix);
+		depthShader.SetMat4f("model", model);
+		light.Draw(depthShader);
+		
+		model = glm::translate(model, glm::vec3(0.0f, -1.0f, -3.0f));
+		depthShader.SetMat4f("model", model);
+		light.Draw(depthShader);
+
 		//RenderScene(true, lightProj, true, lightView);
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 
+#if 1
+		// Quad debug
+		glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// render Depth map to quad for visual debugging
+		// ---------------------------------------------
+		debugDepthQuad.Use();
+		debugDepthQuad.SetFloat("near_plane", 0.1f);
+		debugDepthQuad.SetFloat("far_plane", 750.0f);
+		debugDepthQuad.SetInt("depthMap", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, shadowMap);
+		renderQuad();
+#endif
 
-
+#if 1
 		// Lighting pass
-		//glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glBindTexture(GL_TEXTURE_2D, depthMap);
-		//RenderScene();
+		glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		RenderScene();
+		//RenderScene(true, lightProj, true, lightView);
+#endif
 
 		// Screen render
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
 	glfwTerminate();
 	return 0;
+}
+
+// DEBUG
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }
